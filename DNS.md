@@ -1,10 +1,10 @@
 # DNS для veximail.space
 
-Подставь `SERVER_IP` — публичный IPv4 сервера. Все записи в зоне `veximail.space`.
+Сервер: `178.255.126.90`. Все записи в зоне `veximail.space`.
 
 | Тип   | Имя                | Значение                                  | TTL  |
 |-------|--------------------|-------------------------------------------|------|
-| A     | `mail`             | `SERVER_IP`                               | 300  |
+| A     | `mail`             | `178.255.126.90`                          | 300  |
 | MX    | `@`                | `10 mail.veximail.space.`                 | 300  |
 | TXT   | `@`                | `v=spf1 a:mail.veximail.space ~all`       | 300  |
 | TXT   | `_dmarc`           | `v=DMARC1; p=none; rua=mailto:postmaster@veximail.space` | 300  |
@@ -13,7 +13,7 @@
 
 | Тип   | Имя                | Значение                                  | TTL  |
 |-------|--------------------|-------------------------------------------|------|
-| A     | `@`                | `SERVER_IP`                               | 300  |
+| A     | `@`                | `178.255.126.90`                          | 300  |
 
 На старте держи TTL = 300. После того как всё проверишь — подними до 3600.
 
@@ -23,13 +23,13 @@
 «Reverse DNS», «rDNS», «PTR» для IP сервера и задай:
 
 ```
-SERVER_IP  →  mail.veximail.space
+178.255.126.90  →  mail.veximail.space
 ```
 
 Проверка с любой машины:
 
 ```
-dig -x SERVER_IP +short
+dig -x 178.255.126.90 +short
 ```
 
 Должно вернуть `mail.veximail.space.`. Согласованность обязательна:
@@ -38,14 +38,14 @@ dig -x SERVER_IP +short
 PTR (rDNS)              = mail.veximail.space
 myhostname (postfix)    = mail.veximail.space
 SMTP banner             = mail.veximail.space ESMTP
-A mail.veximail.space   = SERVER_IP
+A mail.veximail.space   = 178.255.126.90
 ```
 
 ## Проверка снаружи
 
 ```
-dig MX veximail.space +short
-dig A mail.veximail.space +short
-dig TXT veximail.space +short
-dig -x SERVER_IP +short
+dig MX veximail.space +short            # → 10 mail.veximail.space.
+dig A mail.veximail.space +short        # → 178.255.126.90
+dig TXT veximail.space +short           # → "v=spf1 a:mail.veximail.space ~all"
+dig -x 178.255.126.90 +short            # → mail.veximail.space.
 ```
