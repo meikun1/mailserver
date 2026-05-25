@@ -35,7 +35,7 @@ debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Si
 apt-get update
 apt-get install -y \
   postfix postfix-pcre \
-  dovecot-core dovecot-imapd dovecot-lmtpd \
+  dovecot-core dovecot-imapd dovecot-pop3d dovecot-lmtpd \
   certbot ufw ca-certificates mailutils dnsutils
 
 install -d -m 0755 /etc/systemd/resolved.conf.d
@@ -47,6 +47,8 @@ ufw allow 25/tcp
 ufw allow 80/tcp
 ufw allow 143/tcp
 ufw allow 993/tcp
+ufw allow 110/tcp
+ufw allow 995/tcp
 ufw --force enable
 
 systemctl stop postfix dovecot 2>/dev/null || true
