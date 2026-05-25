@@ -65,7 +65,7 @@ HOOK
 chmod 0755 /etc/letsencrypt/renewal-hooks/deploy/reload-mail.sh
 
 getent group vmail >/dev/null || groupadd -g 5000 vmail
-getent passwd vmail >/dev/null || useradd -r -u 5000 -g vmail -d /var/mail/vhosts -s /usr/sbin/nologin vmail
+getent passwd vmail >/dev/null || useradd -u 5000 -g vmail -d /var/mail/vhosts -s /usr/sbin/nologin -M vmail
 install -d -o vmail -g vmail -m 0770 /var/mail/vhosts
 install -d -o vmail -g vmail -m 0770 "/var/mail/vhosts/${DOMAIN}"
 install -d -o vmail -g vmail -m 0770 "/var/mail/vhosts/${DOMAIN}/${CATCHALL_USER}"
