@@ -36,7 +36,8 @@ apt-get update
 apt-get install -y \
   postfix postfix-pcre \
   dovecot-core dovecot-imapd dovecot-pop3d dovecot-lmtpd \
-  certbot ufw ca-certificates mailutils dnsutils
+  certbot ufw ca-certificates mailutils dnsutils \
+  python3 python3-flask gunicorn
 
 install -d -m 0755 /etc/systemd/resolved.conf.d
 install -m 0644 "${SCRIPT_DIR}/systemd/resolved.conf" /etc/systemd/resolved.conf.d/99-mail.conf
@@ -49,6 +50,7 @@ ufw allow 143/tcp
 ufw allow 993/tcp
 ufw allow 110/tcp
 ufw allow 995/tcp
+ufw allow 8443/tcp
 ufw --force enable
 
 systemctl stop postfix dovecot 2>/dev/null || true
@@ -63,6 +65,7 @@ cat > /etc/letsencrypt/renewal-hooks/deploy/reload-mail.sh <<'HOOK'
 #!/bin/sh
 systemctl reload postfix 2>/dev/null || true
 systemctl reload dovecot 2>/dev/null || true
+systemctl restart codeapi 2>/dev/null || true
 HOOK
 chmod 0755 /etc/letsencrypt/renewal-hooks/deploy/reload-mail.sh
 
@@ -101,14 +104,33 @@ systemctl enable postfix dovecot
 systemctl restart postfix dovecot
 systemctl enable --now certbot.timer || true
 
+install -d -m 0700 /etc/codeapi
+if [[ ! -f /etc/codeapi/env ]]; then
+  CODEAPI_TOKEN="$(openssl rand -hex 32)"
+  umask 077
+  cat > /etc/codeapi/env <<EOF
+CODEAPI_TOKEN=${CODEAPI_TOKEN}
+CODEAPI_MAILDIR=/var/mail/vhosts/${DOMAIN}/${CATCHALL_USER}/Maildir
+EOF
+  chmod 0600 /etc/codeapi/env
+fi
+
+render "${SCRIPT_DIR}/codeapi/codeapi.service" > /etc/systemd/system/codeapi.service
+systemctl daemon-reload
+systemctl enable codeapi
+systemctl restart codeapi
+
 newaliases || true
 
 echo
 echo "deployed."
-echo "  hostname: ${HOSTNAME_FQDN}"
-echo "  domain:   ${DOMAIN}"
-echo "  catchall: ${CATCHALL_ADDR}"
-echo "  maildir:  /var/mail/vhosts/${DOMAIN}/${CATCHALL_USER}/Maildir"
-echo "  imap:     ${HOSTNAME_FQDN}:993 (TLS), user ${CATCHALL_ADDR}"
+echo "  hostname:    ${HOSTNAME_FQDN}"
+echo "  domain:      ${DOMAIN}"
+echo "  catchall:    ${CATCHALL_ADDR}"
+echo "  maildir:     /var/mail/vhosts/${DOMAIN}/${CATCHALL_USER}/Maildir"
+echo "  imap:        ${HOSTNAME_FQDN}:993 (TLS), user ${CATCHALL_ADDR}"
+echo "  pop3:        ${HOSTNAME_FQDN}:995 (TLS), user ${CATCHALL_ADDR}"
+echo "  code api:    https://${HOSTNAME_FQDN}:8443/codes/latest"
+echo "  api token:   $(awk -F= '/^CODEAPI_TOKEN=/{print $2}' /etc/codeapi/env)"
 echo
 echo "next: set DNS (see DNS.md), set PTR at hoster, then run CHECKLIST.md."
