@@ -48,7 +48,7 @@ resolvectl status | sed -n '/Global/,/Link/p'
 ```
 dig MX veximail.space +short
 dig A  mail.veximail.space +short
-dig -x 178.255.126.90 +short
+dig -x 178.16.55.219 +short
 ```
 
 См. `DNS.md` — три верхние записи должны быть согласованы.
@@ -113,7 +113,7 @@ du -sh /var/mail/vhosts/veximail.space/catchall/Maildir
    правильный IP.
 4. **PTR не настроен** — gmail и крупные провайдеры режут такие
    входящие *молча*, в логах сервера действительно пусто.
-   Проверка: `dig -x 178.255.126.90 +short`.
+   Проверка: `dig -x 178.16.55.219 +short`.
 
 ## Задержка SMTP-баннера (5–15 с)
 
