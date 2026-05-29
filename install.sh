@@ -22,21 +22,6 @@ if [[ -z "${CATCHALL_PASSWORD}" ]]; then
   exit 1
 fi
 
-TG_ENV_FILE="/etc/tgbot/env"
-if [[ -z "${TG_BOT_TOKEN:-}" && -f "$TG_ENV_FILE" ]]; then
-  TG_BOT_TOKEN="$(awk -F= '/^TG_BOT_TOKEN=/{sub(/^TG_BOT_TOKEN=/,""); print; exit}' "$TG_ENV_FILE" || true)"
-fi
-if [[ -z "${TG_CHAT_ID:-}" && -f "$TG_ENV_FILE" ]]; then
-  TG_CHAT_ID="$(awk -F= '/^TG_CHAT_ID=/{sub(/^TG_CHAT_ID=/,""); print; exit}' "$TG_ENV_FILE" || true)"
-fi
-if [[ -z "${TG_BOT_TOKEN:-}" ]]; then
-  read -rsp "Telegram bot token (from @BotFather, leave empty to skip): " TG_BOT_TOKEN
-  echo
-fi
-if [[ -n "${TG_BOT_TOKEN:-}" && -z "${TG_CHAT_ID:-}" ]]; then
-  read -rp "Telegram chat id (numeric, leave empty to skip): " TG_CHAT_ID
-fi
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 hostnamectl set-hostname "$HOSTNAME_FQDN"
@@ -79,7 +64,6 @@ cat > /etc/letsencrypt/renewal-hooks/deploy/reload-mail.sh <<'HOOK'
 #!/bin/sh
 systemctl reload postfix 2>/dev/null || true
 systemctl reload dovecot 2>/dev/null || true
-systemctl restart tgbot   2>/dev/null || true
 HOOK
 chmod 0755 /etc/letsencrypt/renewal-hooks/deploy/reload-mail.sh
 
@@ -118,39 +102,6 @@ systemctl enable postfix dovecot
 systemctl restart postfix dovecot
 systemctl enable --now certbot.timer || true
 
-getent group  tgbot >/dev/null || groupadd -r tgbot
-getent passwd tgbot >/dev/null || useradd -r -g tgbot -d /var/lib/tgbot -s /usr/sbin/nologin -M tgbot
-install -d -o tgbot -g tgbot -m 0700 /var/lib/tgbot
-install -d -m 0750 /etc/tgbot
-
-if [[ -n "${TG_BOT_TOKEN:-}" && -n "${TG_CHAT_ID:-}" ]]; then
-  umask 077
-  cat > "$TG_ENV_FILE" <<EOF
-IMAP_HOST=${HOSTNAME_FQDN}
-IMAP_USER=${CATCHALL_ADDR}
-IMAP_PASS=${CATCHALL_PASSWORD}
-TG_BOT_TOKEN=${TG_BOT_TOKEN}
-TG_CHAT_ID=${TG_CHAT_ID}
-STATE_DIR=/var/lib/tgbot
-POLL_INTERVAL=15
-SEND_NO_CODE=0
-EOF
-  chown root:tgbot "$TG_ENV_FILE"
-  chmod 0640 "$TG_ENV_FILE"
-fi
-
-install -m 0644 "${SCRIPT_DIR}/tgbot/tgbot.service" /etc/systemd/system/tgbot.service
-systemctl daemon-reload
-
-if [[ -f "$TG_ENV_FILE" ]]; then
-  systemctl enable tgbot
-  systemctl restart tgbot
-  TGBOT_STATUS="enabled"
-else
-  systemctl disable tgbot 2>/dev/null || true
-  TGBOT_STATUS="not configured (no TG_BOT_TOKEN/TG_CHAT_ID; rerun installer to enable)"
-fi
-
 newaliases || true
 
 echo
@@ -161,6 +112,5 @@ echo "  catchall:  ${CATCHALL_ADDR}"
 echo "  maildir:   /var/mail/vhosts/${DOMAIN}/${CATCHALL_USER}/Maildir"
 echo "  imap:      ${HOSTNAME_FQDN}:993 (TLS), user ${CATCHALL_ADDR}"
 echo "  pop3:      ${HOSTNAME_FQDN}:995 (TLS), user ${CATCHALL_ADDR}"
-echo "  tgbot:     ${TGBOT_STATUS}"
 echo
 echo "next: set DNS (see DNS.md), set PTR at hoster, then run CHECKLIST.md."
