@@ -37,7 +37,7 @@ apt-get install -y \
   postfix postfix-pcre \
   dovecot-core dovecot-imapd dovecot-pop3d dovecot-lmtpd \
   certbot ufw ca-certificates mailutils dnsutils \
-  python3 fail2ban
+  python3 fail2ban unattended-upgrades
 
 install -d -m 0755 /etc/systemd/resolved.conf.d
 install -m 0644 "${SCRIPT_DIR}/systemd/resolved.conf" /etc/systemd/resolved.conf.d/99-mail.conf
@@ -115,6 +115,13 @@ EOF
 chmod 0644 /etc/cron.d/maildir-retention
 
 install -m 0644 "${SCRIPT_DIR}/logrotate/dovecot" /etc/logrotate.d/dovecot
+
+cat > /etc/apt/apt.conf.d/20auto-upgrades <<'EOF'
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";
+EOF
+systemctl enable --now unattended-upgrades
 
 newaliases || true
 
