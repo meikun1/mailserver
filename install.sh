@@ -92,7 +92,7 @@ install -d -m 0755 /etc/dovecot
 render "${SCRIPT_DIR}/dovecot/dovecot.conf" > /etc/dovecot/dovecot.conf
 rm -rf /etc/dovecot/conf.d
 
-HASH="$(doveadm pw -s SHA512-CRYPT -p "$CATCHALL_PASSWORD")"
+HASH="{SHA512-CRYPT}$(openssl passwd -6 -stdin <<< "$CATCHALL_PASSWORD")"
 umask 077
 printf "%s:%s::::::\n" "$CATCHALL_ADDR" "$HASH" > /etc/dovecot/users
 chown root:dovecot /etc/dovecot/users

@@ -59,7 +59,23 @@ IMAP: `mail.veximail.space:993` (TLS), логин
 ## Смена пароля
 
 ```
-doveadm pw -s SHA512-CRYPT -p 'новый-пароль'
-# полученный хеш вставить в /etc/dovecot/users
+openssl passwd -6
+# программа дважды спросит пароль, выведет хеш вида $6$salt$hash
+```
+
+Открой `/etc/dovecot/users`, замени хеш в существующей строке так,
+чтобы получилось:
+
+```
+catchall@veximail.space:{SHA512-CRYPT}$6$salt$hash::::::
+```
+
+Применить:
+
+```
 systemctl reload dovecot
 ```
+
+Старый вариант `doveadm pw -p 'пароль'` не используем: пароль на
+время выполнения виден в argv через `ps`. `openssl passwd` читает
+пароль с tty и в argv не светит.
