@@ -107,6 +107,13 @@ install -m 0644 "${SCRIPT_DIR}/fail2ban/jail.local" /etc/fail2ban/jail.d/mail.lo
 systemctl enable fail2ban
 systemctl restart fail2ban
 
+render "${SCRIPT_DIR}/maildir/retention.sh" > /usr/local/sbin/maildir-retention.sh
+chmod 0755 /usr/local/sbin/maildir-retention.sh
+cat > /etc/cron.d/maildir-retention <<'EOF'
+17 3 * * * root /usr/local/sbin/maildir-retention.sh
+EOF
+chmod 0644 /etc/cron.d/maildir-retention
+
 newaliases || true
 
 echo
