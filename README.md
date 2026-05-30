@@ -16,16 +16,20 @@ chmod +x install.sh
 ./install.sh
 ```
 
-Скрипт спросит только пароль для catch-all-ящика. Можно прокинуть
-через переменные окружения:
+Скрипт спросит пароль для catch-all-ящика интерактивно (вводится
+скрыто, в argv и в shell history не попадает). Остальные параметры
+не секретные, их можно прокинуть через переменные окружения:
 
 ```
 DOMAIN=veximail.space \
 HOSTNAME_FQDN=mail.veximail.space \
 ADMIN_EMAIL=admin@veximail.space \
-CATCHALL_PASSWORD='...' \
 ./install.sh
 ```
+
+**Не передавай пароль через `CATCHALL_PASSWORD=... ./install.sh`** —
+он попадёт в `~/.bash_history`, в `ps eww` родительского shell и в
+`/proc/<pid>/environ`. Только интерактивный prompt.
 
 ## Перед запуском
 
