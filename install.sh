@@ -114,6 +114,8 @@ cat > /etc/cron.d/maildir-retention <<'EOF'
 EOF
 chmod 0644 /etc/cron.d/maildir-retention
 
+install -m 0644 "${SCRIPT_DIR}/logrotate/dovecot" /etc/logrotate.d/dovecot
+
 newaliases || true
 
 echo
