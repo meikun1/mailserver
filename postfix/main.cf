@@ -26,6 +26,12 @@ smtpd_helo_required = yes
 disable_vrfy_command = yes
 smtpd_timeout = 60s
 
+smtpd_client_connection_count_limit = 20
+smtpd_client_connection_rate_limit = 50
+smtpd_client_message_rate_limit = 100
+smtpd_client_recipient_rate_limit = 200
+anvil_rate_time_unit = 60s
+
 smtpd_client_restrictions =
 smtpd_helo_restrictions =
     reject_invalid_helo_hostname,
