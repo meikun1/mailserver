@@ -89,8 +89,8 @@ postmap /etc/postfix/virtual
 postmap /etc/postfix/vmailbox
 
 install -d -m 0755 /etc/dovecot
+install -d -m 0755 /etc/dovecot/conf.d
 render "${SCRIPT_DIR}/dovecot/dovecot.conf" > /etc/dovecot/dovecot.conf
-rm -rf /etc/dovecot/conf.d
 
 HASH="{SHA512-CRYPT}$(openssl passwd -6 -stdin <<< "$CATCHALL_PASSWORD")"
 umask 077
