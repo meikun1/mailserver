@@ -196,4 +196,8 @@ doveadm user catchall@veximail.space     # проверка userdb
 doveconf -n                              # эффективный dovecot.conf
 journalctl -u postfix -n 100 --no-pager
 journalctl -u dovecot -n 100 --no-pager
+fail2ban-client status                   # список активных jail
+fail2ban-client status dovecot           # забаненные IP по dovecot
+fail2ban-client status sshd              # забаненные IP по sshd
+fail2ban-client set dovecot unbanip X.X.X.X  # снять бан вручную
 ```

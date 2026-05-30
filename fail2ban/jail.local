@@ -1,0 +1,19 @@
+[DEFAULT]
+findtime = 10m
+bantime  = 1h
+maxretry = 5
+backend  = systemd
+
+[sshd]
+enabled = true
+
+[dovecot]
+enabled = true
+port    = pop3,pop3s,imap,imaps,submission,465,sieve
+
+[postfix]
+enabled = true
+mode    = aggressive
+
+[postfix-sasl]
+enabled = false

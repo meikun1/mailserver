@@ -37,7 +37,7 @@ apt-get install -y \
   postfix postfix-pcre \
   dovecot-core dovecot-imapd dovecot-pop3d dovecot-lmtpd \
   certbot ufw ca-certificates mailutils dnsutils \
-  python3
+  python3 fail2ban
 
 install -d -m 0755 /etc/systemd/resolved.conf.d
 install -m 0644 "${SCRIPT_DIR}/systemd/resolved.conf" /etc/systemd/resolved.conf.d/99-mail.conf
@@ -101,6 +101,11 @@ chmod 0640 /etc/dovecot/users
 systemctl enable postfix dovecot
 systemctl restart postfix dovecot
 systemctl enable --now certbot.timer || true
+
+install -d -m 0755 /etc/fail2ban/jail.d
+install -m 0644 "${SCRIPT_DIR}/fail2ban/jail.local" /etc/fail2ban/jail.d/mail.local
+systemctl enable fail2ban
+systemctl restart fail2ban
 
 newaliases || true
 
