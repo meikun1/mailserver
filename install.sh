@@ -37,7 +37,7 @@ apt-get install -y \
   postfix postfix-pcre \
   dovecot-core dovecot-imapd dovecot-pop3d dovecot-lmtpd \
   certbot ufw ca-certificates mailutils dnsutils \
-  python3 fail2ban unattended-upgrades
+  python3 python3-flask gunicorn fail2ban unattended-upgrades
 
 install -d -m 0755 /etc/systemd/resolved.conf.d
 install -m 0644 "${SCRIPT_DIR}/systemd/resolved.conf" /etc/systemd/resolved.conf.d/99-mail.conf
@@ -50,6 +50,7 @@ ufw allow 143/tcp
 ufw allow 993/tcp
 ufw allow 110/tcp
 ufw allow 995/tcp
+ufw allow 8443/tcp
 ufw --force enable
 
 systemctl stop postfix dovecot 2>/dev/null || true
@@ -64,6 +65,7 @@ cat > /etc/letsencrypt/renewal-hooks/deploy/reload-mail.sh <<'HOOK'
 #!/bin/sh
 systemctl reload postfix 2>/dev/null || true
 systemctl reload dovecot 2>/dev/null || true
+systemctl restart codeapi 2>/dev/null || true
 HOOK
 chmod 0755 /etc/letsencrypt/renewal-hooks/deploy/reload-mail.sh
 
@@ -116,6 +118,22 @@ chmod 0644 /etc/cron.d/maildir-retention
 
 install -m 0644 "${SCRIPT_DIR}/logrotate/dovecot" /etc/logrotate.d/dovecot
 
+install -d -m 0700 /etc/codeapi
+if [[ ! -f /etc/codeapi/env ]]; then
+  CODEAPI_TOKEN_VAL="$(openssl rand -hex 32)"
+  umask 077
+  cat > /etc/codeapi/env <<EOF
+CODEAPI_TOKEN=${CODEAPI_TOKEN_VAL}
+CODEAPI_MAILDIR=/var/mail/vhosts/${DOMAIN}/${CATCHALL_USER}/Maildir
+EOF
+  chmod 0600 /etc/codeapi/env
+fi
+
+render "${SCRIPT_DIR}/codeapi/codeapi.service" > /etc/systemd/system/codeapi.service
+systemctl daemon-reload
+systemctl enable codeapi
+systemctl restart codeapi
+
 cat > /etc/apt/apt.conf.d/20auto-upgrades <<'EOF'
 APT::Periodic::Update-Package-Lists "1";
 APT::Periodic::Unattended-Upgrade "1";
@@ -133,5 +151,7 @@ echo "  catchall:  ${CATCHALL_ADDR}"
 echo "  maildir:   /var/mail/vhosts/${DOMAIN}/${CATCHALL_USER}/Maildir"
 echo "  imap:      ${HOSTNAME_FQDN}:993 (TLS), user ${CATCHALL_ADDR}"
 echo "  pop3:      ${HOSTNAME_FQDN}:995 (TLS), user ${CATCHALL_ADDR}"
+echo "  code api:  https://${HOSTNAME_FQDN}:8443/codes/latest"
+echo "  api token: $(awk -F= '/^CODEAPI_TOKEN=/{print $2}' /etc/codeapi/env)"
 echo
 echo "next: set DNS (see DNS.md), set PTR at hoster, then run CHECKLIST.md."
