@@ -44,8 +44,7 @@ smtpd_relay_restrictions = permit_mynetworks, reject_unauth_destination
 smtpd_recipient_restrictions = permit_mynetworks, reject_unauth_destination
 
 virtual_mailbox_domains = __DOMAIN__
-virtual_alias_maps = hash:/etc/postfix/virtual
-virtual_mailbox_maps = hash:/etc/postfix/vmailbox
+virtual_mailbox_maps = pcre:/etc/postfix/vmailbox.pcre
 virtual_transport = lmtp:unix:private/dovecot-lmtp
 
 smtpd_tls_cert_file = /etc/letsencrypt/live/__HOSTNAME__/fullchain.pem

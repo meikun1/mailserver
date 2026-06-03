@@ -83,12 +83,9 @@ render() {
       "$1"
 }
 
-render "${SCRIPT_DIR}/postfix/main.cf"  > /etc/postfix/main.cf
-render "${SCRIPT_DIR}/postfix/virtual"  > /etc/postfix/virtual
-render "${SCRIPT_DIR}/postfix/vmailbox" > /etc/postfix/vmailbox
-
-postmap /etc/postfix/virtual
-postmap /etc/postfix/vmailbox
+render "${SCRIPT_DIR}/postfix/main.cf"       > /etc/postfix/main.cf
+render "${SCRIPT_DIR}/postfix/vmailbox.pcre" > /etc/postfix/vmailbox.pcre
+rm -f /etc/postfix/virtual /etc/postfix/virtual.db /etc/postfix/vmailbox /etc/postfix/vmailbox.db
 
 install -d -m 0755 /etc/dovecot
 install -d -m 0755 /etc/dovecot/conf.d
