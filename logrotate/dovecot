@@ -1,0 +1,12 @@
+/var/log/dovecot.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 root adm
+    postrotate
+        systemctl reload dovecot > /dev/null 2>&1 || true
+    endscript
+}

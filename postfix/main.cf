@@ -1,0 +1,67 @@
+compatibility_level = 3.6
+
+smtpd_banner = $myhostname ESMTP
+biff = no
+append_dot_mydomain = no
+readme_directory = no
+unknown_local_recipient_reject_code = 550
+
+myhostname = __HOSTNAME__
+mydomain = __DOMAIN__
+myorigin = $mydomain
+mydestination = localhost.$mydomain, localhost
+mynetworks = 127.0.0.0/8 [::1]/128
+relayhost =
+inet_interfaces = all
+inet_protocols = ipv4
+
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+recipient_delimiter = +
+
+message_size_limit = 10485760
+mailbox_size_limit = 0
+
+smtpd_helo_required = yes
+disable_vrfy_command = yes
+smtpd_timeout = 60s
+
+smtpd_client_connection_count_limit = 20
+smtpd_client_connection_rate_limit = 50
+smtpd_client_message_rate_limit = 100
+smtpd_client_recipient_rate_limit = 200
+anvil_rate_time_unit = 60s
+
+smtpd_client_restrictions =
+smtpd_helo_restrictions =
+    reject_invalid_helo_hostname,
+    reject_non_fqdn_helo_hostname,
+    permit
+smtpd_sender_restrictions =
+    reject_non_fqdn_sender,
+    permit
+smtpd_relay_restrictions = permit_mynetworks, reject_unauth_destination
+smtpd_recipient_restrictions = permit_mynetworks, reject_unauth_destination
+
+virtual_mailbox_domains = __DOMAIN__
+virtual_mailbox_maps = pcre:/etc/postfix/vmailbox.pcre
+virtual_transport = lmtp:unix:private/dovecot-lmtp
+
+smtpd_tls_cert_file = /etc/letsencrypt/live/__HOSTNAME__/fullchain.pem
+smtpd_tls_key_file  = /etc/letsencrypt/live/__HOSTNAME__/privkey.pem
+smtpd_tls_security_level = may
+smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
+smtpd_tls_received_header = yes
+smtpd_tls_loglevel = 1
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+
+smtp_tls_security_level = may
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+
+tls_random_source = dev:/dev/urandom
+
+queue_directory = /var/spool/postfix
+command_directory = /usr/sbin
+daemon_directory = /usr/lib/postfix/sbin
+data_directory = /var/lib/postfix
+mail_owner = postfix
